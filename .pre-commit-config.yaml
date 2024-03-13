@@ -1,9 +1,24 @@
 repos:
--   repo: https://github.com/psf/black
+  - repo: git@github.com:Yelp/detect-secrets
+    rev: v1.3.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: no-commit-to-branch
+        args: [--branch, main]
+  - repo: https://github.com/psf/black
     rev: 23.11.0
     hooks:
-    -   id: black
--   repo: https://github.com/kynan/nbstripout
+      - id: black
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+  - repo: https://github.com/kynan/nbstripout
     rev: 0.6.1
     hooks:
-    -   id: nbstripout
+      - id: nbstripout
