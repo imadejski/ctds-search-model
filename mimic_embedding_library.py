@@ -53,6 +53,10 @@ def create_paths(df):
 
 
 def _get_image_inference_engine():
+    """
+    Defines image inference model from BioVIL-T image encoder.
+    Applies resizing and cropping to image.
+    """
     image_inference = ImageInferenceEngine(
         image_model=get_biovil_t_image_encoder(),
         transform=create_chest_xray_transform_for_inference(
@@ -62,21 +66,28 @@ def _get_image_inference_engine():
     return image_inference
 
 
+def convert_tensor_to_np_array(tensor):
+    """
+    Returns numpy array from Torch tensor.
+    """
+    if tensor.is_cuda:
+        tensor = tensor.cpu()
+
+    numpy_array = tensor.numpy()
+    return numpy_array
+
+
 def get_image_embedding(image_path):
+    """
+    Returns numpy array of l2-normalized global image embedding from
+    image inference model
+    """
     image_inference = _get_image_inference_engine()
     image_embedding = image_inference.get_projected_global_embedding(
         image_path=Path(image_path)
     )
     np_img_embedding = convert_tensor_to_np_array(image_embedding)
     return np_img_embedding
-
-
-def convert_tensor_to_np_array(tensor):
-    if tensor.is_cuda:
-        tensor = tensor.cpu()
-
-    numpy_array = tensor.numpy()
-    return numpy_array
 
 
 def main():
