@@ -1,21 +1,16 @@
-import pandas as pd
-
-from typing import List
-from typing import Tuple
-
 import tempfile
 from pathlib import Path
+from typing import List, Tuple
 
+import pandas as pd
 import torch
-from IPython.display import display
-from IPython.display import Markdown
-
 from health_multimodal.common.visualization import plot_phrase_grounding_similarity_map
-from health_multimodal.text import get_bert_inference
-from health_multimodal.text.utils import BertEncoderType
 from health_multimodal.image import get_image_inference
 from health_multimodal.image.utils import ImageModelType
+from health_multimodal.text import get_bert_inference
+from health_multimodal.text.utils import BertEncoderType
 from health_multimodal.vlp import ImageTextInferenceEngine
+from IPython.display import Markdown, display
 
 text_inference = get_bert_inference(BertEncoderType.BIOVIL_T_BERT)
 image_inference = get_image_inference(ImageModelType.BIOVIL_T)

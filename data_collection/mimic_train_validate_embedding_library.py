@@ -14,16 +14,20 @@ from health_multimodal.image.model.pretrained import get_biovil_t_image_encoder
 from health_multimodal.text.utils import BertEncoderType, get_bert_inference
 from health_multimodal.vlp.inference_engine import ImageTextInferenceEngine
 from torchvision.datasets.utils import check_integrity
+from tqdm import tqdm
 
 RESIZE = 512
 CENTER_CROP_SIZE = 512
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("Using device:", device)
 
-def create_validate_df(file_path):
+
+def create_validate_train_df(file_path):
     """Creates the dataframe with the validation data and initializes a file_path column"""
     split_df = pd.read_csv(file_path)
-    validate_df = split_df[split_df["split"] == "validate"]
-    return validate_df
+    validate_train_df = split_df[split_df["split"].isin(["validate", "train"])]
+    return validate_train_df
 
 
 def create_paths(df):
@@ -58,7 +62,7 @@ def _get_image_inference_engine():
     Applies resizing and cropping to image.
     """
     image_inference = ImageInferenceEngine(
-        image_model=get_biovil_t_image_encoder(),
+        image_model=get_biovil_t_image_encoder().to(device),
         transform=create_chest_xray_transform_for_inference(
             resize=RESIZE, center_crop_size=CENTER_CROP_SIZE
         ),
@@ -77,13 +81,13 @@ def convert_tensor_to_np_array(tensor):
     return numpy_array
 
 
-def get_image_embedding(image_path):
+def get_image_embedding(image_path, inference_engine):
     """
     Returns numpy array of l2-normalized global image embedding from
     image inference model
     """
-    image_inference = _get_image_inference_engine()
-    image_embedding = image_inference.get_projected_global_embedding(
+
+    image_embedding = inference_engine.get_projected_global_embedding(
         image_path=Path(image_path)
     )
     np_img_embedding = convert_tensor_to_np_array(image_embedding)
@@ -91,20 +95,25 @@ def get_image_embedding(image_path):
 
 
 def main():
+    image_inference = _get_image_inference_engine()
+
     split_file_path = "/opt/gpudata/mimic-cxr/mimic-cxr-2.0.0-split.csv.gz"
 
     embedding_library_output_path = (
-        "/home/imadejski/ctds-search-model/mimic_validate_embedding_library.csv"
+        "/home/imadejski/ctds-search-model/mimic_validate_train_embedding_library.csv"
     )
 
-    validate_df = create_validate_df(split_file_path)
-    validate_df = create_paths(validate_df)
+    validate_train_df = create_validate_train_df(split_file_path)
+    validate_train_df = create_paths(validate_train_df)
 
-    validate_df["embedding"] = np.nan
+    validate_train_df["embedding"] = np.nan
 
-    validate_df["embedding"] = validate_df["file_path"].apply(get_image_embedding)
+    tqdm.pandas(desc="Calculating Embeddings")
+    validate_train_df["embedding"] = validate_train_df["file_path"].progress_apply(
+        get_image_embedding, inference_engine=image_inference
+    )
 
-    validate_df.to_csv(embedding_library_output_path, index=False)
+    validate_train_df.to_csv(embedding_library_output_path, index=False)
 
     return None
 
