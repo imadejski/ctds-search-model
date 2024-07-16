@@ -101,7 +101,7 @@ def main():
 
     split_file_path = "/opt/gpudata/mimic-cxr/mimic-cxr-2.0.0-split.csv.gz"
 
-    embedding_library_output_path = "/opt/gpudata/imadejski/search-model/ctds-search-model/data/mimic_validate_embedding_library_biovil.csv"
+    embedding_library_output_path = "/home/imadejski/ctds-search-model/data/mimic_validate_embedding_library_biovil.csv"
 
     validate_df = create_validate_df(split_file_path)
     validate_df = create_paths(validate_df)
