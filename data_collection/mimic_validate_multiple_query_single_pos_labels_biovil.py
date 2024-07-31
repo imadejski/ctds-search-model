@@ -11,7 +11,7 @@ from health_multimodal.image import ImageInferenceEngine
 from health_multimodal.image.data.transforms import (
     create_chest_xray_transform_for_inference,
 )
-from health_multimodal.image.model.pretrained import get_biovil_t_image_encoder
+from health_multimodal.image.model.pretrained import get_biovil_image_encoder
 from health_multimodal.text import TextInferenceEngine
 from health_multimodal.text.utils import BertEncoderType, get_bert_inference
 from health_multimodal.vlp.inference_engine import ImageTextInferenceEngine
@@ -28,14 +28,14 @@ def _get_vlp_inference_engine() -> ImageTextInferenceEngine:
     Creates an returns an instance of the ImageTextInferenceEngine
     """
     image_inference = ImageInferenceEngine(
-        image_model=get_biovil_t_image_encoder(),
+        image_model=get_biovil_image_encoder(),
         transform=create_chest_xray_transform_for_inference(
             resize=RESIZE, center_crop_size=CENTER_CROP_SIZE
         ),
     )
     img_txt_inference = ImageTextInferenceEngine(
         image_inference_engine=image_inference,
-        text_inference_engine=get_bert_inference(BertEncoderType.BIOVIL_T_BERT),
+        text_inference_engine=get_bert_inference(BertEncoderType.CXR_BERT),
     )
     return img_txt_inference
 
@@ -113,7 +113,7 @@ def convert_string_to_np(embedding_str):
 
 
 def main():
-    text_inference = get_bert_inference(BertEncoderType.BIOVIL_T_BERT)
+    text_inference = get_bert_inference(BertEncoderType.CXR_BERT)
 
     labels = [
         "Atelectasis",
@@ -132,9 +132,7 @@ def main():
         "Support Devices",
     ]
 
-    mimic_embedding_library_path = (
-        "/home/imadejski/ctds-search-model/data/mimic_validate_embedding_library.csv"
-    )
+    mimic_embedding_library_path = "/home/imadejski/ctds-search-model/data/mimic/embedding_libraries/mimic_validate_embedding_library_biovil.csv"
     mimic_embeddings_pd = img_embeddings_df(mimic_embedding_library_path)
 
     for label in labels:
@@ -147,7 +145,6 @@ def main():
         for i in range(len(pos_search_queries)):
             mimic_embeddings_pd[f"{label} cosine_similarity_{i+1}"] = np.nan
 
-        mimic_embeddings_pd[f"{label} average_embedding"] = np.nan
         mimic_embeddings_pd[f"{label} average_cosine_similarity"] = np.nan
         mimic_embeddings_pd[f"{label} max_cosine_similarity"] = np.nan
 
@@ -164,13 +161,6 @@ def main():
                 ] = cosine_similarity
                 cosine_similarities.append(cosine_similarity)
 
-            average_embedding_cosine_similarity = find_cosine_similarity(
-                img_embedding, avg_pos_embedding
-            )
-            mimic_embeddings_pd.at[
-                index, f"{label} average_embedding"
-            ] = average_embedding_cosine_similarity
-
             if cosine_similarities:
                 average_of_cosine_similarities = np.mean(cosine_similarities)
                 mimic_embeddings_pd.at[
@@ -182,9 +172,7 @@ def main():
                     index, f"{label} max_cosine_similarity"
                 ] = max_of_cosine_similarities
 
-    output_file_path = (
-        "/home/imadejski/ctds-search-model/data/multiple_pos_cosine_similarity_new2.csv"
-    )
+    output_file_path = "/home/imadejski/ctds-search-model/data/mimic/cosine_similarity/mimic_validate_multiple_query_single_pos_label_cosine_similarity_biovil.csv"
     mimic_embeddings_pd.to_csv(output_file_path, index=False)
 
 
