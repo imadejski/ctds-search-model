@@ -33,7 +33,7 @@ def create_paths(df):
 
         # assign path in df
         path = (
-            "/opt/gpudata/mimic-cxr/jpg/p"
+            "/opt/gpudata/mimic-cxr/files/p"
             + str(patient_id)[:2]
             + "/p"
             + str(patient_id)
@@ -82,7 +82,7 @@ def get_image_embedding(image_path, inference_engine):
 def main(model_checkpoint_path, embedding_library_output_path, split_type):
     image_inference = _get_image_inference_engine(model_checkpoint_path)
 
-    split_file_path = "/opt/gpudata/mimic-cxr/mimic-cxr-2.0.0-split.csv.gz"
+    split_file_path = "/opt/gpudata/mimic-cxr/mimic-cxr-2.0.0-split.csv"
 
     split_df = create_split_df(split_file_path, split_type)
     split_df = create_paths(split_df)
